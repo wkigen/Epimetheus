@@ -39,11 +39,12 @@ public class EpimetheusManager {
 
         try {
             File fixDexFile = new File(fixDexPath);
-            if (fixDexFile.exists()){
+            File patchFile = new File(patchPath);
+            if (fixDexFile.exists() && patchFile.exists()){
                 File fixPathFile = new File(fixDexOptPath);
-                File patchFile = new File(patchPath);
+
                 List<File> fixFiles = new ArrayList<>();
-                fixFiles.add(fixDexFile);
+                //fixFiles.add(fixDexFile);
                 fixFiles.add(patchFile);
                 EpimetheusDexLoader.loadFixDalvikDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
             }else{

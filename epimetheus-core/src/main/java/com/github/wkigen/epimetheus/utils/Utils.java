@@ -1,7 +1,9 @@
 package com.github.wkigen.epimetheus.utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
+import java.util.zip.ZipFile;
 
 /**
  * Created by Dell on 2018/3/27.
@@ -28,8 +30,26 @@ public class Utils {
 
             }
         }
-
         return outStream.toByteArray();
+    }
+
+    public static void unZipPatch(String patch){
+
+        ZipFile zipFile = null;
+        try{
+            zipFile =  new ZipFile(new File(patch));
+
+
+        }catch (Exception e){
+
+        }finally {
+            try{
+                if (zipFile != null)
+                    zipFile.close();
+            }catch (Exception e){
+
+            }
+        }
     }
 
 }

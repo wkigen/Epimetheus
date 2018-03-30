@@ -74,7 +74,6 @@ public class EpimetheusLoader {
                 }
 
                 if (EpimetheusJni.deleteClass(oldDexByte,oldDexByte.length,patchDexByte,patchDexByte.length)){
-                    Dex dex = new Dex(oldDexByte);
                     extractedStream.write(oldDexByte,0,oldDexByte.length);
                 }else{
                     EpimetheusLog.e(TAG,"can not delete classDef");
