@@ -21,15 +21,16 @@ public class App extends Application {
 
         init();
 
-        EpimetheusManager.installDVCold(this);
+        EpimetheusManager.installDalvik(this);
     }
 
     void init(){
+
         InputStream inputStream = null;
         OutputStream outputStream = null;
         final String patchName = "Patch.patch";
-        try{
 
+        try{
             inputStream =  getAssets().open(patchName);
             String path = getFilesDir().getAbsolutePath()+"/"+patchName;
             outputStream = new FileOutputStream(path);

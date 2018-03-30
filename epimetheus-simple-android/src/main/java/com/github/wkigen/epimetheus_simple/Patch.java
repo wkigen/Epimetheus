@@ -7,7 +7,7 @@ package com.github.wkigen.epimetheus_simple;
 public class Patch {
 
     public String print(){
-        return "base";
+        return "base app";
     }
 
 }

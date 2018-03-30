@@ -4,7 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
-import com.github.wkigen.epimetheus.loader.EpimetheusDexLoader;
+import com.github.wkigen.epimetheus.loader.EpimetheusLoader;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
 
 /**
@@ -22,7 +22,6 @@ EpimetheusService extends IntentService {
         super(EpimetheusService.class.getSimpleName());
     }
 
-
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent == null){
@@ -36,7 +35,7 @@ EpimetheusService extends IntentService {
             return;
         }
 
-        EpimetheusDexLoader.tryColdInstall(getApplicationContext(),patchPath);
+        EpimetheusLoader.tryDalvikInstall(getApplicationContext(),patchPath);
 
     }
 

@@ -6,6 +6,8 @@ import android.os.Build;
 import android.util.Log;
 
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
+import com.github.wkigen.epimetheus.loader.EpimetheusDexLoader;
+import com.github.wkigen.epimetheus.log.EpimetheusLog;
 import com.github.wkigen.epimetheus.service.EpimetheusService;
 import com.github.wkigen.epimetheus.utils.ReflectUtils;
 
@@ -29,29 +31,35 @@ public class EpimetheusManager {
     public final static String TAG = "EpimetheusManager";
 
 
-    public static void installDVCold(Application applicationp){
+    public static void installDalvik(Application applicationp){
 
         final String fixDexPath = applicationp.getFilesDir().getAbsolutePath()+"/" + EpimetheusConstant.FIX_DEX_NAME;
         final String fixDexOptPath = applicationp.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.FIX_DEX_PATH;
         final String patchPath = applicationp.getFilesDir().getAbsolutePath()+"/Patch.patch";
 
-        File fixFile = new File(fixDexPath);
-        if (fixFile.exists()){
-            File fixPathFile = new File(fixDexOptPath);
-            File patchFile = new File(patchPath);
-            loadFixDVDex(applicationp.getClassLoader(),fixPathFile,fixFile,patchFile);
-        }else{
-            //cold install
-            Intent intent = new Intent(applicationp.getApplicationContext(), EpimetheusService.class);
-            intent.putExtra(EpimetheusConstant.PATCH_PATH_STRING,patchPath);
-            applicationp.getApplicationContext().startService(intent);
+        try {
+            File fixDexFile = new File(fixDexPath);
+            if (fixDexFile.exists()){
+                File fixPathFile = new File(fixDexOptPath);
+                File patchFile = new File(patchPath);
+                List<File> fixFiles = new ArrayList<>();
+                fixFiles.add(fixDexFile);
+                fixFiles.add(patchFile);
+                EpimetheusDexLoader.loadFixDalvikDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
+            }else{
+                //cold install
+                Intent intent = new Intent(applicationp.getApplicationContext(), EpimetheusService.class);
+                intent.putExtra(EpimetheusConstant.PATCH_PATH_STRING,patchPath);
+                applicationp.getApplicationContext().startService(intent);
+            }
+        }catch (Exception e){
+            EpimetheusLog.e(TAG,e.getMessage());
         }
 
     }
 
-    private static void loadFixDVDex(ClassLoader classLoader, File dexOptDir, File fixFile,File patchFile){
 
 
-    }
+
 
 }
