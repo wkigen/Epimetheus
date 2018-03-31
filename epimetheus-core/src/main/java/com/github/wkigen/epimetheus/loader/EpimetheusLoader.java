@@ -10,6 +10,7 @@ import com.github.wkigen.epimetheus.log.EpimetheusLog;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,46 +28,35 @@ public class EpimetheusLoader {
     public static boolean tryDalvikInstall(Context context, String dexPath){
 
         ZipFile apk = null;
-        ZipFile patch = null;
 
         try {
 
             ApplicationInfo applicationInfo = context.getApplicationInfo();
-
             apk =  new ZipFile(applicationInfo.sourceDir);
-            patch = new ZipFile(dexPath);
 
-            //-------------temp
             final String srcDexPath = "classes.dex";
-            final String patchDexPath = "Patch.dex";
             final String fixDexPath = context.getFilesDir().getAbsolutePath()+"/" + EpimetheusConstant.FIX_DEX_NAME;
 
             File outputFile = new File(fixDexPath);
 
-            ZipEntry rawApkFileEntry = apk.getEntry(srcDexPath);
-            ZipEntry rawPatchFileEntry = patch.getEntry(patchDexPath);
+            ZipEntry rawApkDexFileEntry = apk.getEntry(srcDexPath);
 
-            if (rawApkFileEntry == null){
-                EpimetheusLog.e(TAG,"apk entry is null");
+            if (rawApkDexFileEntry == null){
+                EpimetheusLog.e(TAG,"apk classes dex entry is null");
                 return false;
             }
 
-            if (rawPatchFileEntry == null){
-                EpimetheusLog.e(TAG,"patch entry is null");
-                return false;
-            }
-
-            InputStream oldStream = null;
-            InputStream patchStream = null;
-            OutputStream extractedStream = null;
+            InputStream oldDexStream = null;
+            InputStream patchDexStream = null;
+            OutputStream extractedDexStream = null;
 
             try {
-                oldStream = apk.getInputStream(rawApkFileEntry);
-                patchStream = patch.getInputStream(rawPatchFileEntry);
-                extractedStream = new FileOutputStream(outputFile);
+                oldDexStream = apk.getInputStream(rawApkDexFileEntry);
+                patchDexStream = new FileInputStream(new File(dexPath));
+                extractedDexStream = new FileOutputStream(outputFile);
 
-                byte[] oldDexByte = Utils.readByte(oldStream);
-                byte[] patchDexByte = Utils.readByte(patchStream);
+                byte[] oldDexByte = Utils.readByte(oldDexStream);
+                byte[] patchDexByte = Utils.readByte(patchDexStream);
 
                 if (oldDexByte == null || patchDexByte == null){
                     EpimetheusLog.e(TAG,"can not read the dex");
@@ -74,22 +64,21 @@ public class EpimetheusLoader {
                 }
 
                 if (EpimetheusJni.deleteClass(oldDexByte,oldDexByte.length,patchDexByte,patchDexByte.length)){
-                    extractedStream.write(oldDexByte,0,oldDexByte.length);
+                    extractedDexStream.write(oldDexByte,0,oldDexByte.length);
                 }else{
                     EpimetheusLog.e(TAG,"can not delete classDef");
                     return false;
                 }
 
             } finally {
-                if (oldStream != null){
-                    oldStream.close();
+                if (oldDexStream != null){
+                    oldDexStream.close();
                 }
-                if (patchStream != null){
-                    patchStream.close();
-
+                if (patchDexStream != null){
+                    patchDexStream.close();
                 }
-                if (extractedStream != null){
-                    extractedStream.close();
+                if (extractedDexStream != null){
+                    extractedDexStream.close();
                 }
             }
 
@@ -99,9 +88,6 @@ public class EpimetheusLoader {
             try {
                 if (apk != null){
                     apk.close();
-                }
-                if (patch != null){
-                    patch.close();
                 }
             }catch (Exception e){
                 EpimetheusLog.e(TAG,"close the zip is fail:"+e.getMessage());
