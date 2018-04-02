@@ -21,7 +21,7 @@ public class App extends Application {
 
         init();
 
-        EpimetheusManager.installDalvik(this);
+        EpimetheusManager.install(this);
     }
 
     void init(){

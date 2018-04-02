@@ -31,6 +31,7 @@ EpimetheusService extends IntentService {
         String patchPath = intent.getStringExtra(EpimetheusConstant.PATCH_PATH_STRING);
         String unZipPatch = getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH;
         String patchDexName = intent.getStringExtra(EpimetheusConstant.PATCH_DEX_STRING);
+        String serviceType = intent.getStringExtra(EpimetheusConstant.PATCH_SERVICE_TYPE_STRING);
 
         if (patchPath == null || patchDexName == null){
             EpimetheusLog.e(TAG,"patch path or dex name can not be null");
@@ -38,8 +39,11 @@ EpimetheusService extends IntentService {
         }
 
         Utils.unZipPatch(patchPath,unZipPatch);
-        EpimetheusLoader.tryDalvikInstall(getApplicationContext(),unZipPatch+"/"+patchDexName);
 
+        if (serviceType.equals(EpimetheusConstant.PATCH_ART_SERVICE_TYPE_STRING))
+             EpimetheusLoader.tryArtInstall(getApplicationContext(),unZipPatch+"/"+patchDexName);
+        else
+            EpimetheusLoader.tryDalvikInstall(getApplicationContext(),unZipPatch+"/"+patchDexName);
     }
 
 
