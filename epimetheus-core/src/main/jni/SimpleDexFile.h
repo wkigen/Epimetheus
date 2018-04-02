@@ -19,6 +19,29 @@ typedef int64_t             s8;
 #define DEX_OPT_MAGIC   "dey\n"
 #define DEX_OPT_MAGIC_VERS  "036\0"
 
+enum {
+    kDexTypeHeaderItem               = 0x0000,
+    kDexTypeStringIdItem             = 0x0001,
+    kDexTypeTypeIdItem               = 0x0002,
+    kDexTypeProtoIdItem              = 0x0003,
+    kDexTypeFieldIdItem              = 0x0004,
+    kDexTypeMethodIdItem             = 0x0005,
+    kDexTypeClassDefItem             = 0x0006,
+    kDexTypeCallSiteIdItem           = 0x0007,
+    kDexTypeMethodHandleItem         = 0x0008,
+    kDexTypeMapList                  = 0x1000,
+    kDexTypeTypeList                 = 0x1001,
+    kDexTypeAnnotationSetRefList     = 0x1002,
+    kDexTypeAnnotationSetItem        = 0x1003,
+    kDexTypeClassDataItem            = 0x2000,
+    kDexTypeCodeItem                 = 0x2001,
+    kDexTypeStringDataItem           = 0x2002,
+    kDexTypeDebugInfoItem            = 0x2003,
+    kDexTypeAnnotationItem           = 0x2004,
+    kDexTypeEncodedArrayItem         = 0x2005,
+    kDexTypeAnnotationsDirectoryItem = 0x2006,
+};
+
 /*
  * 160-bit SHA-1 digest.
  */
@@ -62,6 +85,18 @@ struct DexHeader {
     u4  classDefsOff;
     u4  dataSize;
     u4  dataOff;
+};
+
+struct DexMapItem {
+    u2 type;              /* type code (see kDexType* above) */
+    u2 unused;
+    u4 size;              /* count of items of the indicated type */
+    u4 offset;            /* file offset to the start of data */
+};
+
+struct DexMapList {
+    u4  size;               /* #of entries in list */
+    DexMapItem list[1];     /* entries */
 };
 
 struct DexStringId {
@@ -183,13 +218,21 @@ extern __inline__ const DexClassDef* dexGetClassDef(const DexFile* pDexFile, u4 
     return &pDexFile->pClassDefs[idx];
 }
 
+extern __inline__ DexMapList* dexGetMap(const DexFile* pDexFile) {
+    u4 mapOff = pDexFile->pHeader->mapOff;
+
+    if (mapOff == 0) {
+        return NULL;
+    } else {
+        return  (DexMapList* )(pDexFile->baseAddr + mapOff);
+    }
+}
+
 DexFile* dexFileParse(const u1* data, size_t length);
 
 void dexFileFree(DexFile* pDexFile);
 
 bool deleteClassDef(u1* oldDexData,size_t oldLen,u1* patchDexData,size_t pathcLen);
-
-
 
 
 #endif

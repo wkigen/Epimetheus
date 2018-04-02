@@ -1,9 +1,12 @@
 package com.github.wkigen.epimetheus.utils;
 
+import android.os.Environment;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -34,6 +37,22 @@ public class Utils {
             }
         }
         return outStream.toByteArray();
+    }
+
+    public static void writeToSD(byte[] data,String name){
+        if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            try{
+                String allPath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/Epimetheus/";
+                File pathFile = new File(allPath);
+                if (!pathFile.exists())
+                    pathFile.exists();
+                OutputStream outputStream = new FileOutputStream(allPath+"/"+name);
+                outputStream.write(data);
+                outputStream.close();
+            }catch (Exception e){
+
+            }
+        }
     }
 
     public static void unZipPatch(String patch,String unZipPath){

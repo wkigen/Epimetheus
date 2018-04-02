@@ -35,7 +35,7 @@ public class EpimetheusLoader {
             apk =  new ZipFile(applicationInfo.sourceDir);
 
             final String srcDexPath = "classes.dex";
-            final String fixDexPath = context.getFilesDir().getAbsolutePath()+"/" + EpimetheusConstant.FIX_DEX_NAME;
+            final String fixDexPath = context.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH +"/"+ EpimetheusConstant.FIX_DEX_NAME;
 
             File outputFile = new File(fixDexPath);
 
@@ -64,7 +64,7 @@ public class EpimetheusLoader {
                 }
 
                 if (EpimetheusJni.deleteClass(oldDexByte,oldDexByte.length,patchDexByte,patchDexByte.length)){
-                    extractedDexStream.write(oldDexByte,0,oldDexByte.length);
+                    extractedDexStream.write(oldDexByte);
                 }else{
                     EpimetheusLog.e(TAG,"can not delete classDef");
                     return false;

@@ -23,21 +23,22 @@ public class EpimetheusManager {
 
     public static void installDalvik(Application applicationp){
 
-        final String fixDexPath = applicationp.getFilesDir().getAbsolutePath()+"/" + EpimetheusConstant.FIX_DEX_NAME;
+        final String fixDexPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH +"/"+ EpimetheusConstant.FIX_DEX_NAME;
         final String fixDexOptPath = applicationp.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.FIX_DEX_OPT_PATH;
         final String patchPath = applicationp.getFilesDir().getAbsolutePath()+"/Patch.patch";
         final String dexName = "Patch.dex";
         final String patchDexPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH+"/"+dexName;
-
 
         try {
             File fixDexFile = new File(fixDexPath);
             File patchDexFile = new File(patchDexPath);
             if (fixDexFile.exists() && patchDexFile.exists()){
                 File fixPathFile = new File(fixDexOptPath);
+                if (!fixPathFile.exists())
+                    fixPathFile.mkdirs();
 
                 List<File> fixFiles = new ArrayList<>();
-                //fixFiles.add(fixDexFile);
+                fixFiles.add(fixDexFile);
                 fixFiles.add(patchDexFile);
                 EpimetheusDexLoader.loadFixDalvikDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
             }else{
