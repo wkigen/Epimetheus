@@ -8,6 +8,7 @@ import com.github.wkigen.epimetheus.loader.EpimetheusDexLoader;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
 import com.github.wkigen.epimetheus.service.EpimetheusService;
 import com.github.wkigen.epimetheus.utils.SystemUtils;
+import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,33 +23,47 @@ public class EpimetheusManager {
     public final static String TAG = "EpimetheusManager";
 
     public static void install(Application applicationp){
+
+        //init
+        final String dexName = "Patch.dex";
+        final String patchPath = applicationp.getFilesDir().getAbsolutePath()+"/Patch.patch";
+        final String fixDexOptPath = applicationp.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.FIX_DEX_OPT_PATH;
+        File fixPathFile = new File(fixDexOptPath);
+        if (!fixPathFile.exists()){
+            fixPathFile.mkdirs();
+            unZipPatch(applicationp,patchPath);
+        }
+
         if (SystemUtils.isART()){
-            installART(applicationp);
+            installART(applicationp,fixPathFile,patchPath,dexName);
         }else{
-            installDalvik(applicationp);
+            installDalvik(applicationp,fixPathFile,patchPath,dexName);
         }
     }
 
-    private static void installART(Application applicationp){
+    private static void unZipPatch(Application applicationp,String patchPath){
+        String unZipPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH;
+        Utils.unZipPatch(patchPath,unZipPath);
+    }
+
+    public static void installHot(Application applicationp){
+
+    }
+
+    private static void installART(Application applicationp,File fixPathFile,String patchPath,String patchDexName){
 
         final String fixDexPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH +"/"+ EpimetheusConstant.FIX_ZIP_NAME;
-        final String fixDexOptPath = applicationp.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.FIX_DEX_OPT_PATH;
-        final String patchPath = applicationp.getFilesDir().getAbsolutePath()+"/Patch.patch";
-        final String dexName = "Patch.dex";
 
         try {
             File fixDexFile = new File(fixDexPath);
             if (fixDexFile.exists()){
-                File fixPathFile = new File(fixDexOptPath);
-                if (!fixPathFile.exists())
-                    fixPathFile.mkdirs();
                 List<File> fixFiles = new ArrayList<>();
                 fixFiles.add(fixDexFile);
                 EpimetheusDexLoader.loadDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
             }else{
                 Intent intent = new Intent(applicationp.getApplicationContext(), EpimetheusService.class);
                 intent.putExtra(EpimetheusConstant.PATCH_PATH_STRING,patchPath);
-                intent.putExtra(EpimetheusConstant.PATCH_DEX_STRING,dexName);
+                intent.putExtra(EpimetheusConstant.PATCH_DEX_STRING,patchDexName);
                 intent.putExtra(EpimetheusConstant.PATCH_SERVICE_TYPE_STRING,EpimetheusConstant.PATCH_ART_SERVICE_TYPE_STRING);
                 applicationp.getApplicationContext().startService(intent);
             }
@@ -57,22 +72,15 @@ public class EpimetheusManager {
         }
     }
 
-    private static void installDalvik(Application applicationp){
+    private static void installDalvik(Application applicationp,File fixPathFile,String patchPath,String patchDexName){
 
         final String fixDexPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH +"/"+ EpimetheusConstant.FIX_DEX_NAME;
-        final String fixDexOptPath = applicationp.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.FIX_DEX_OPT_PATH;
-        final String patchPath = applicationp.getFilesDir().getAbsolutePath()+"/Patch.patch";
-        final String dexName = "Patch.dex";
-        final String patchDexPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH+"/"+dexName;
+        final String patchDexPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH+"/"+patchDexName;
 
         try {
             File fixDexFile = new File(fixDexPath);
             File patchDexFile = new File(patchDexPath);
             if (fixDexFile.exists() && patchDexFile.exists()){
-                File fixPathFile = new File(fixDexOptPath);
-                if (!fixPathFile.exists())
-                    fixPathFile.mkdirs();
-
                 List<File> fixFiles = new ArrayList<>();
                 fixFiles.add(fixDexFile);
                 fixFiles.add(patchDexFile);
@@ -80,7 +88,7 @@ public class EpimetheusManager {
             }else{
                 Intent intent = new Intent(applicationp.getApplicationContext(), EpimetheusService.class);
                 intent.putExtra(EpimetheusConstant.PATCH_PATH_STRING,patchPath);
-                intent.putExtra(EpimetheusConstant.PATCH_DEX_STRING,dexName);
+                intent.putExtra(EpimetheusConstant.PATCH_DEX_STRING,patchDexName);
                 intent.putExtra(EpimetheusConstant.PATCH_SERVICE_TYPE_STRING,EpimetheusConstant.PATCH_DALUIK_SERVICE_TYPE_STRING);
                 applicationp.getApplicationContext().startService(intent);
             }
