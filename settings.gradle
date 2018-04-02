@@ -1,1 +1,1 @@
-include ':epimetheus-simple-android', ':epimetheus-core', ':epimetheus-simple-patch'
+include ':epimetheus-simple-android', ':epimetheus-core'
