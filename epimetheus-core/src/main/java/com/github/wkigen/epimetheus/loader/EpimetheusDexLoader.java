@@ -31,7 +31,7 @@ public class EpimetheusDexLoader {
     final static String EXTRACTED_SUFFIX = ".zip";
     final static String DEX_SUFFIX = ".dex";
 
-    public static void loadFixDalvikDex(ClassLoader classLoader, File dexOptDir, List<File> fixFiles)
+    public static void loadDex(ClassLoader classLoader, File dexOptDir, List<File> fixFiles)
             throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
             InvocationTargetException, NoSuchMethodException, IOException, SecurityException,
             ClassNotFoundException, InstantiationException {

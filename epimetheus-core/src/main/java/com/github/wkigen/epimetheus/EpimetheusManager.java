@@ -44,7 +44,7 @@ public class EpimetheusManager {
                     fixPathFile.mkdirs();
                 List<File> fixFiles = new ArrayList<>();
                 fixFiles.add(fixDexFile);
-                EpimetheusDexLoader.loadFixDalvikDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
+                EpimetheusDexLoader.loadDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
             }else{
                 Intent intent = new Intent(applicationp.getApplicationContext(), EpimetheusService.class);
                 intent.putExtra(EpimetheusConstant.PATCH_PATH_STRING,patchPath);
@@ -76,7 +76,7 @@ public class EpimetheusManager {
                 List<File> fixFiles = new ArrayList<>();
                 fixFiles.add(fixDexFile);
                 fixFiles.add(patchDexFile);
-                EpimetheusDexLoader.loadFixDalvikDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
+                EpimetheusDexLoader.loadDex(applicationp.getClassLoader(),fixPathFile,fixFiles);
             }else{
                 Intent intent = new Intent(applicationp.getApplicationContext(), EpimetheusService.class);
                 intent.putExtra(EpimetheusConstant.PATCH_PATH_STRING,patchPath);

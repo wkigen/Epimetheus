@@ -11,11 +11,11 @@ public class SystemUtils {
         boolean isArt = false;
         String version = System.getProperty("java.vm.version");
         if (version != null){
-            String[] temp = version.split(".");
+            String[] temp = version.split("\\.");
             if (temp.length > 2 ){
                 int major = Integer.parseInt(temp[0]);
                 int minor = Integer.parseInt(temp[1]);
-                if (major > 0 || (major == 2 && minor >= 1)){
+                if (major >= 2 ){
                     isArt = true;
                 }
             }
