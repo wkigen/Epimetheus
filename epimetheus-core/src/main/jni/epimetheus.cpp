@@ -5,7 +5,6 @@
 #include "epimetheus.h"
 #include "SimpleDexFile.h"
 #include "Log.h"
-#include "ReplaceMethod.h"
 #include <string.h>
 
 #ifdef __cplusplus

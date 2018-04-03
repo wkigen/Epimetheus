@@ -41,16 +41,18 @@ public class EpimetheusManager {
             Utils.unZipPatch(patchPath,unZipPath);
         }
 
-        installHot(applicationp,fixDexOptPath,dexName);
+        if (SystemUtils.isART()){
+            installART(applicationp,fixPathFile,patchPath,dexName);
+        }else{
+            installDalvik(applicationp,fixPathFile,patchPath,dexName);
+        }
 
-//        if (SystemUtils.isART()){
-//            installART(applicationp,fixPathFile,patchPath,dexName);
-//        }else{
-//            installDalvik(applicationp,fixPathFile,patchPath,dexName);
-//        }
     }
 
-    public static boolean installHot(Application applicationp,String fixDexOptPath,String patchDexName){
+    public static boolean installHot(Application applicationp){
+
+        final String fixDexOptPath = applicationp.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.FIX_DEX_OPT_PATH;
+        final String patchDexName = "Patch.dex";
 
         final String patchClassName = "com.github.wkigen.epimetheus_simple.Patch";
         final String patchMethodName = "print";
