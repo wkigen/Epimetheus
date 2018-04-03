@@ -4,10 +4,9 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
-import com.github.wkigen.epimetheus.dex.Dex;
 import com.github.wkigen.epimetheus.jni.EpimetheusJni;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
-import com.github.wkigen.epimetheus.utils.SystemUtils;
+import com.github.wkigen.epimetheus.patch.PatchFixClass;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
@@ -15,9 +14,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipEntry;
@@ -34,7 +33,7 @@ public class EpimetheusLoader {
 
     public final static String TAG = "EpimetheusLoader";
 
-    public static boolean tryHotInstall(Context context, String dexPath,String fixDexOptPath,String patchClassName,String patchMethodName){
+    public static boolean tryHotInstall(Context context, String dexPath,String fixDexOptPath,List<PatchFixClass> fixClassList){
 
         try{
 
@@ -67,23 +66,25 @@ public class EpimetheusLoader {
             Class<?> patchClazz = null;
             while (entrys.hasMoreElements()) {
                 String entry = entrys.nextElement();
-                if (entry.equals(patchClassName) ) {
-                    patchClazz = dexFile.loadClass(entry, patchClassLoader);
-                    if (patchClazz != null) {
-                        Method[] methods = patchClazz.getDeclaredMethods();
-                        for (Method patchMethod : methods) {
-                           if (patchMethod.getName().equals(patchMethodName)){
-                               Class<?> willFixClazz = context.getClassLoader().loadClass(patchClassName);
-                               Method willFixMethod = willFixClazz.getDeclaredMethod(patchMethodName,patchMethod.getParameterTypes());
-                               EpimetheusJni.replaceMethod(willFixMethod,patchMethod);
+                for (PatchFixClass fixClass : fixClassList){
+                    if (entry.equals(fixClass.name) ) {
+                        patchClazz = dexFile.loadClass(entry, patchClassLoader);
+                        if (patchClazz != null) {
+                            Method[] methods = patchClazz.getDeclaredMethods();
+                            for (Method patchMethod : methods) {
+                                for (String patchMethodName:fixClass.fixMethod) {
+                                    if (patchMethod.getName().equals(patchMethodName)) {
+                                        Class<?> willFixClazz = context.getClassLoader().loadClass(fixClass.name);
+                                        Method willFixMethod = willFixClazz.getDeclaredMethod(patchMethodName, patchMethod.getParameterTypes());
+                                        EpimetheusJni.replaceMethod(willFixMethod, patchMethod);
 
 //                               Field classLoaderField = patchClazz.getDeclaredField("classLoader");
 //                               classLoaderField.setAccessible(true);
 //                               classLoaderField.set(patchClazz,context.getClassLoader());
-                               break;
-                           }
+                                    }
+                                }
+                            }
                         }
-                        break;
                     }
                 }
             }
@@ -92,7 +93,7 @@ public class EpimetheusLoader {
         }
         return true;
     }
-    public static boolean tryArtInstall(Context context, String dexPath) {
+    public static boolean tryArtInstall(Context context, String dexPath,String optDexPath) {
         ZipFile apk = null;
         InputStream patchDexStream = null;
         ZipOutputStream zipOutputStream = null;
@@ -102,11 +103,9 @@ public class EpimetheusLoader {
             ApplicationInfo applicationInfo = context.getApplicationInfo();
             apk =  new ZipFile(applicationInfo.sourceDir);
 
-            final String fixDexPath = context.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH +"/"+ EpimetheusConstant.FIX_ZIP_NAME;
-
             patchDexStream = new FileInputStream(dexPath);
 
-            CheckedOutputStream cos = new CheckedOutputStream(new FileOutputStream(fixDexPath), new CRC32());
+            CheckedOutputStream cos = new CheckedOutputStream(new FileOutputStream(optDexPath), new CRC32());
             zipOutputStream = new ZipOutputStream(cos);
 
             //先写入补丁dex
@@ -137,12 +136,12 @@ public class EpimetheusLoader {
                     }
                     zipOutputStream.closeEntry();
                     orgDexInputStream.close();
-
                 }
             }
 
         }catch (Exception e){
             EpimetheusLog.e(TAG,e.getMessage());
+            return false;
         }finally {
             try {
                 if (zipOutputStream !=null)
@@ -159,7 +158,7 @@ public class EpimetheusLoader {
         return true;
     }
 
-    public static boolean tryDalvikInstall(Context context, String dexPath){
+    public static boolean tryDalvikInstall(Context context, String dexPath,String optDexPath){
         ZipFile apk = null;
         InputStream oldDexStream = null;
         InputStream patchDexStream = null;
@@ -170,9 +169,8 @@ public class EpimetheusLoader {
             apk =  new ZipFile(applicationInfo.sourceDir);
 
             final String srcDexPath = "classes.dex";
-            final String fixDexPath = context.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH +"/"+ EpimetheusConstant.FIX_DEX_NAME;
 
-            File outputFile = new File(fixDexPath);
+            File outputFile = new File(optDexPath);
 
             ZipEntry rawApkDexFileEntry = apk.getEntry(srcDexPath);
 

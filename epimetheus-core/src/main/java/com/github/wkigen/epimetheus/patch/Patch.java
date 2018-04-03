@@ -4,7 +4,9 @@ import com.github.wkigen.epimetheus.dex.ClassDef;
 import com.github.wkigen.epimetheus.dex.Dex;
 
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -13,31 +15,12 @@ import java.util.Set;
 
 public class Patch {
 
+    public String name;
+    public List<PatchFixClass> fixClasses = new ArrayList<>();
 
+    public Patch(){
 
-    public static boolean deleteClass(byte[] src, byte[] patch, OutputStream out){
-
-        try{
-
-            Dex oldDex = new Dex(src);
-            Dex patchDex = new Dex(patch);
-
-            Set<Integer> deleteClassSet = new HashSet<>();
-            for (ClassDef patchClassDef : patchDex.classDefs()){
-                String patchClassName = patchDex.typeNames().get(patchClassDef.getTypeIndex());
-                for (ClassDef oldClassDef : oldDex.classDefs()){
-                    String oldClassName = oldDex.typeNames().get(oldClassDef.getTypeIndex());
-                    if (patchClassName.equals(oldClassName)){
-                        deleteClassSet.add(oldClassDef.getTypeIndex());
-                    }
-                }
-            }
-
-        }catch (Exception e){
-            return false;
-        }
-
-        return true;
     }
+
 
 }
