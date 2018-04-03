@@ -1,10 +1,12 @@
 package com.github.wkigen.epimetheus;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
 
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
 import com.github.wkigen.epimetheus.loader.EpimetheusDexLoader;
+import com.github.wkigen.epimetheus.loader.EpimetheusLoader;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
 import com.github.wkigen.epimetheus.service.EpimetheusService;
 import com.github.wkigen.epimetheus.utils.SystemUtils;
@@ -12,7 +14,10 @@ import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+
+import dalvik.system.DexFile;
 
 /**
  * Created by Dell on 2018/3/26.
@@ -28,26 +33,33 @@ public class EpimetheusManager {
         final String dexName = "Patch.dex";
         final String patchPath = applicationp.getFilesDir().getAbsolutePath()+"/Patch.patch";
         final String fixDexOptPath = applicationp.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.FIX_DEX_OPT_PATH;
+        String unZipPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH;
+
         File fixPathFile = new File(fixDexOptPath);
         if (!fixPathFile.exists()){
             fixPathFile.mkdirs();
-            unZipPatch(applicationp,patchPath);
+            Utils.unZipPatch(patchPath,unZipPath);
         }
 
-        if (SystemUtils.isART()){
-            installART(applicationp,fixPathFile,patchPath,dexName);
-        }else{
-            installDalvik(applicationp,fixPathFile,patchPath,dexName);
-        }
+        installHot(applicationp,fixDexOptPath,dexName);
+
+//        if (SystemUtils.isART()){
+//            installART(applicationp,fixPathFile,patchPath,dexName);
+//        }else{
+//            installDalvik(applicationp,fixPathFile,patchPath,dexName);
+//        }
     }
 
-    private static void unZipPatch(Application applicationp,String patchPath){
-        String unZipPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH;
-        Utils.unZipPatch(patchPath,unZipPath);
-    }
+    public static boolean installHot(Application applicationp,String fixDexOptPath,String patchDexName){
 
-    public static void installHot(Application applicationp){
+        final String patchClassName = "com.github.wkigen.epimetheus_simple.Patch";
+        final String patchMethodName = "print";
 
+        final String patchDexPath = applicationp.getFilesDir().getAbsolutePath()+"/"+EpimetheusConstant.EPIMETHEUS_PATH+"/"+patchDexName;
+
+        EpimetheusLoader.tryHotInstall(applicationp,patchDexPath,fixDexOptPath,patchClassName,patchMethodName);
+
+        return true;
     }
 
     private static void installART(Application applicationp,File fixPathFile,String patchPath,String patchDexName){

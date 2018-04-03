@@ -7,6 +7,7 @@ import com.github.wkigen.epimetheus.common.EpimetheusConstant;
 import com.github.wkigen.epimetheus.dex.Dex;
 import com.github.wkigen.epimetheus.jni.EpimetheusJni;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
+import com.github.wkigen.epimetheus.utils.SystemUtils;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
@@ -14,12 +15,16 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
+import dalvik.system.DexFile;
 
 /**
  * Created by Dell on 2018/3/26.
@@ -29,6 +34,64 @@ public class EpimetheusLoader {
 
     public final static String TAG = "EpimetheusLoader";
 
+    public static boolean tryHotInstall(Context context, String dexPath,String fixDexOptPath,String patchClassName,String patchMethodName){
+
+        try{
+
+            File patchDexFile = new File(dexPath);
+            if (!patchDexFile.exists())
+                return false;
+
+            File optimizedFile= new File(fixDexOptPath,patchDexFile.getName());
+            if (optimizedFile.exists())
+                optimizedFile.delete();
+
+            final DexFile dexFile = DexFile.loadDex(dexPath,optimizedFile.getAbsolutePath(), Context.MODE_PRIVATE);
+
+            ClassLoader patchClassLoader = new ClassLoader(context.getClassLoader()) {
+                @Override
+                protected Class<?> findClass(String className)
+                        throws ClassNotFoundException {
+                    Class<?> clazz = dexFile.loadClass(className, this);
+                    if (clazz == null) {
+                        return Class.forName(className);
+                    }
+                    if (clazz == null) {
+                        throw new ClassNotFoundException(className);
+                    }
+                    return clazz;
+                }
+            };
+
+            Enumeration<String> entrys = dexFile.entries();
+            Class<?> patchClazz = null;
+            while (entrys.hasMoreElements()) {
+                String entry = entrys.nextElement();
+                if (entry.equals(patchClassName) ) {
+                    patchClazz = dexFile.loadClass(entry, patchClassLoader);
+                    if (patchClazz != null) {
+                        Method[] methods = patchClazz.getDeclaredMethods();
+                        for (Method patchMethod : methods) {
+                           if (patchMethod.getName().equals(patchMethodName)){
+                               Class<?> willFixClazz = context.getClassLoader().loadClass(patchClassName);
+                               Method willFixMethod = willFixClazz.getDeclaredMethod(patchMethodName,patchMethod.getParameterTypes());
+                               EpimetheusJni.replaceMethod(willFixMethod,patchMethod);
+
+//                               Field classLoaderField = patchClazz.getDeclaredField("classLoader");
+//                               classLoaderField.setAccessible(true);
+//                               classLoaderField.set(patchClazz,context.getClassLoader());
+                               break;
+                           }
+                        }
+                        break;
+                    }
+                }
+            }
+        }catch (Exception e){
+            EpimetheusLog.w(TAG,e.getMessage());
+        }
+        return true;
+    }
     public static boolean tryArtInstall(Context context, String dexPath) {
         ZipFile apk = null;
         InputStream patchDexStream = null;

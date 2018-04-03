@@ -7,8 +7,6 @@ package com.github.wkigen.epimetheus.utils;
 public class SystemUtils {
 
     public static boolean isART(){
-
-        boolean isArt = false;
         String version = System.getProperty("java.vm.version");
         if (version != null){
             String[] temp = version.split("\\.");
@@ -16,11 +14,11 @@ public class SystemUtils {
                 int major = Integer.parseInt(temp[0]);
                 int minor = Integer.parseInt(temp[1]);
                 if (major >= 2 ){
-                    isArt = true;
+                    return true;
                 }
             }
         }
-        return isArt;
+        return false;
     }
 
 }

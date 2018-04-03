@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+JNIEXPORT bool JNICALL Java_com_github_wkigen_epimetheus_jni_EpimetheusJni_replaceMethod(JNIEnv *, jclass,jobject,jobject);
 
 JNIEXPORT bool JNICALL Java_com_github_wkigen_epimetheus_jni_EpimetheusJni_deleteClass(JNIEnv *, jclass, jbyteArray,jint,jbyteArray,jint);
 

@@ -4,6 +4,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import java.lang.reflect.Method;
+
 public class SimpleActivity extends AppCompatActivity {
 
     @Override
