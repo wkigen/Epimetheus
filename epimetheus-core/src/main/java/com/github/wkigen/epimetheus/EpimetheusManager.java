@@ -18,7 +18,6 @@ import java.io.InputStream;
  */
 
 public class EpimetheusManager {
-
     private final static String TAG = "EpimetheusManager";
 
     private static String epimetheusPath;
