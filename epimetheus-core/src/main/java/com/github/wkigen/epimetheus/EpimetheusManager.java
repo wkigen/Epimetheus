@@ -10,6 +10,8 @@ import com.github.wkigen.epimetheus.utils.SystemUtils;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 /**
  * Created by Dell on 2018/3/26.
@@ -30,13 +32,6 @@ public class EpimetheusManager {
         return optPath;
     }
 
-    public static EpimetheusPatch testPatch(){
-        EpimetheusPatch patch = new EpimetheusPatch();
-        patch.name = "EpimetheusPatch";
-        patch.fixClasses.add("com.github.wkigen.epimetheus_simple.EpimetheusPatch");
-        return patch;
-    }
-
     public static void init(Application app){
         application = app;
 
@@ -49,13 +44,34 @@ public class EpimetheusManager {
             epimtheusFile.exists();
         if (!optFile.exists())
             optFile.mkdirs();
+
+        final String patchInfoPath = epimetheusPath+"/"+ EpimetheusConstant.PATCH_INFO_FILE_NAME;
+        File patchInfoFile = new File(patchInfoPath);
+        if (patchInfoFile.exists()){
+            InputStream inputStream = null;
+            try {
+                inputStream = new FileInputStream(patchInfoFile);
+                EpimetheusPatch patch = new EpimetheusPatch();
+                patch.read(inputStream);
+                Epimetheus epimetheus = new Epimetheus(application,patch);
+                epimetheus.installCold();
+            }catch (Exception e){
+            }finally {
+                try{
+                    if (inputStream != null)
+                        inputStream.close();
+                }catch (Exception e){
+                }
+            }
+        }
     }
 
     public static void installPatch(String path){
         EpimetheusPatch patch = Utils.unZipPatch(path,application.getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.EPIMETHEUS_PATH);
         if (patch != null){
             if (patch.canHot){
-                installHot(patch);
+                Epimetheus epimetheus = new Epimetheus(application,patch);
+                epimetheus.installHot();
             }
             final String fixDexPath = EpimetheusManager.getEpimetheusPath() + "/" + (SystemUtils.isART()?EpimetheusConstant.FIX_ZIP_NAME :EpimetheusConstant.FIX_DEX_NAME  );
             final String patchDexPath = EpimetheusManager.getEpimetheusPath() + "/" + patch.name + EpimetheusConstant.DEX_SUFFIX;
@@ -65,16 +81,4 @@ public class EpimetheusManager {
             application.startService(intent);
         }
     }
-
-    public static void installCold(EpimetheusPatch patch){
-        Epimetheus epimetheus = new Epimetheus(application,testPatch());
-        epimetheus.installCold();
-    }
-
-    public static void installHot(EpimetheusPatch patch){
-        Epimetheus epimetheus = new Epimetheus(application,patch);
-        epimetheus.installHot();
-    }
-
-
 }

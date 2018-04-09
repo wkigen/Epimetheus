@@ -82,11 +82,8 @@ public class Utils {
                 in.close();
 
                 for (Enumeration<? extends ZipEntry> entries = zipFile.entries(); entries.hasMoreElements();) {
-                    ZipEntry entry = (ZipEntry) entries.nextElement();
+                    ZipEntry entry = entries.nextElement();
                     String zipEntryName = entry.getName();
-                    if (EpimetheusConstant.PATCH_INFO_FILE_NAME.equals(zipEntryName)){
-                        continue;
-                    }
 
                     in = zipFile.getInputStream(entry);
                     String outPath = (unZipPath+ "/" + zipEntryName).replaceAll("\\*", "/");

@@ -8,6 +8,7 @@ import com.github.wkigen.epimetheus.annotation.FIXMETHOD;
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
 import com.github.wkigen.epimetheus.jni.EpimetheusJni;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
+import com.github.wkigen.epimetheus.utils.SystemUtils;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
@@ -72,10 +73,12 @@ public class EpimetheusLoader {
                         patchClazz = dexFile.loadClass(entry, patchClassLoader);
                         if (patchClazz != null) {
 
-                            //同包名下的权限问题
-                            Field classLoaderField = patchClazz.getClass().getDeclaredField("classLoader");
-                            classLoaderField.setAccessible(true);
-                            classLoaderField.set(patchClazz,context.getClassLoader());
+                            if (SystemUtils.isART()){
+                                //同包名下的权限问题
+                                Field classLoaderField = patchClazz.getClass().getDeclaredField("classLoader");
+                                classLoaderField.setAccessible(true);
+                                classLoaderField.set(patchClazz,context.getClassLoader());
+                            }
 
                             Method[] methods = patchClazz.getDeclaredMethods();
                             for (Method patchMethod : methods) {
