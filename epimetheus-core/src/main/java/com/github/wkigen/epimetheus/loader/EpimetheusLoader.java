@@ -3,10 +3,11 @@ package com.github.wkigen.epimetheus.loader;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
+import com.github.wkigen.epimetheus.EpimetheusManager;
+import com.github.wkigen.epimetheus.annotation.FIXMETHOD;
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
 import com.github.wkigen.epimetheus.jni.EpimetheusJni;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
-import com.github.wkigen.epimetheus.patch.PatchFixClass;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.File;
@@ -14,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.List;
@@ -33,10 +35,8 @@ public class EpimetheusLoader {
 
     public final static String TAG = "EpimetheusLoader";
 
-    public static boolean tryHotInstall(Context context, String dexPath,String fixDexOptPath,List<PatchFixClass> fixClassList){
-
+    public static boolean tryHotInstall(Context context, String dexPath,String fixDexOptPath,List<String> fixClassList){
         try{
-
             File patchDexFile = new File(dexPath);
             if (!patchDexFile.exists())
                 return false;
@@ -64,23 +64,27 @@ public class EpimetheusLoader {
 
             Enumeration<String> entrys = dexFile.entries();
             Class<?> patchClazz = null;
+            FIXMETHOD fixmethod;
             while (entrys.hasMoreElements()) {
                 String entry = entrys.nextElement();
-                for (PatchFixClass fixClass : fixClassList){
-                    if (entry.equals(fixClass.name) ) {
+                for (String fixClassName : fixClassList){
+                    if (entry.equals(fixClassName) ) {
                         patchClazz = dexFile.loadClass(entry, patchClassLoader);
                         if (patchClazz != null) {
+
+                            //同包名下的权限问题
+                            Field classLoaderField = patchClazz.getClass().getDeclaredField("classLoader");
+                            classLoaderField.setAccessible(true);
+                            classLoaderField.set(patchClazz,context.getClassLoader());
+
                             Method[] methods = patchClazz.getDeclaredMethods();
                             for (Method patchMethod : methods) {
-                                for (String patchMethodName:fixClass.fixMethod) {
-                                    if (patchMethod.getName().equals(patchMethodName)) {
-                                        Class<?> willFixClazz = context.getClassLoader().loadClass(fixClass.name);
-                                        Method willFixMethod = willFixClazz.getDeclaredMethod(patchMethodName, patchMethod.getParameterTypes());
+                                fixmethod = patchMethod.getAnnotation(FIXMETHOD.class);
+                                if (fixmethod != null){
+                                    if (patchMethod.getName().equals(patchMethod.getName())) {
+                                        Class<?> willFixClazz = context.getClassLoader().loadClass(fixClassName);
+                                        Method willFixMethod = willFixClazz.getDeclaredMethod(patchMethod.getName(), patchMethod.getParameterTypes());
                                         EpimetheusJni.replaceMethod(willFixMethod, patchMethod);
-
-//                               Field classLoaderField = patchClazz.getDeclaredField("classLoader");
-//                               classLoaderField.setAccessible(true);
-//                               classLoaderField.set(patchClazz,context.getClassLoader());
                                     }
                                 }
                             }
@@ -94,14 +98,15 @@ public class EpimetheusLoader {
         return true;
     }
     public static boolean tryArtInstall(Context context, String dexPath,String optDexPath) {
-        ZipFile apk = null;
+
+        ZipFile lastDexZipFile = null;
         InputStream patchDexStream = null;
         ZipOutputStream zipOutputStream = null;
         byte[] buffer=new byte[1024];
-        int count =0;
+        int count = 0;
         try {
             ApplicationInfo applicationInfo = context.getApplicationInfo();
-            apk =  new ZipFile(applicationInfo.sourceDir);
+            lastDexZipFile =  new ZipFile(applicationInfo.sourceDir);
 
             patchDexStream = new FileInputStream(dexPath);
 
@@ -117,7 +122,7 @@ public class EpimetheusLoader {
             zipOutputStream.closeEntry();
 
             //写入apk中的dex
-            for (Enumeration<? extends ZipEntry> entries = apk.entries(); entries.hasMoreElements();) {
+            for (Enumeration<? extends ZipEntry> entries = lastDexZipFile.entries(); entries.hasMoreElements();) {
                 ZipEntry apkDexEntry = (ZipEntry) entries.nextElement();
                 String zipEntryName = apkDexEntry.getName();
 
@@ -125,9 +130,9 @@ public class EpimetheusLoader {
 
                     String index = zipEntryName.substring(EpimetheusConstant.DEX_PREFIX.length(),zipEntryName.length()-EpimetheusConstant.DEX_SUFFIX.length());
                     Integer idx = index.length() == 0 ? 1 : Integer.parseInt(index)+1;
-                    String dexName = EpimetheusConstant.DEX_PREFIX+ idx + EpimetheusConstant.DEX_SUFFIX;
+                    String dexName = EpimetheusConstant.DEX_PREFIX + idx + EpimetheusConstant.DEX_SUFFIX;
 
-                    InputStream orgDexInputStream = apk.getInputStream(apkDexEntry);
+                    InputStream orgDexInputStream = lastDexZipFile.getInputStream(apkDexEntry);
 
                     ZipEntry orgDexEntry = new ZipEntry(dexName);
                     zipOutputStream.putNextEntry(orgDexEntry);
@@ -138,7 +143,6 @@ public class EpimetheusLoader {
                     orgDexInputStream.close();
                 }
             }
-
         }catch (Exception e){
             EpimetheusLog.e(TAG,e.getMessage());
             return false;
@@ -148,8 +152,8 @@ public class EpimetheusLoader {
                     zipOutputStream.close();
                 if (patchDexStream != null)
                     patchDexStream.close();
-                if (apk != null){
-                    apk.close();
+                if (lastDexZipFile != null){
+                    lastDexZipFile.close();
                 }
             }catch (Exception e){
                 EpimetheusLog.e(TAG,"close the zip is fail:"+e.getMessage());

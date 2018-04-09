@@ -26,7 +26,7 @@ public class SimpleActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EpimetheusManager.installHot(getApplication());
+                EpimetheusManager.installPatch(getFilesDir().getAbsolutePath()+"/Patch.patch");
 
                 Patch patch = new Patch();
                 showText.setText(patch.print());

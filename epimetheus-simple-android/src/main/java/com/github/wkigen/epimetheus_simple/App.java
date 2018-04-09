@@ -5,6 +5,7 @@ import android.app.Application;
 import com.github.wkigen.epimetheus.EpimetheusManager;
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
 import com.github.wkigen.epimetheus.jni.EpimetheusJni;
+import com.github.wkigen.epimetheus.patch.EpimetheusPatch;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 import java.io.FileOutputStream;
@@ -23,9 +24,11 @@ public class App extends Application {
 
         init();
 
-        Utils.unZipPatch(getFilesDir().getAbsolutePath()+"/Patch.patch",getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.EPIMETHEUS_PATH);
+        EpimetheusManager.init(this);
 
-        EpimetheusManager.install(this);
+        EpimetheusPatch patch =  Utils.unZipPatch(getFilesDir().getAbsolutePath()+"/Patch.patch",getFilesDir().getAbsolutePath()+"/"+ EpimetheusConstant.EPIMETHEUS_PATH);
+        EpimetheusManager.installCold(patch);
+
     }
 
     void init(){

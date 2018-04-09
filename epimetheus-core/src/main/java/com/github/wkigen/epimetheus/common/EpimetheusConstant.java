@@ -17,12 +17,17 @@ public class EpimetheusConstant {
     public final static String PATCH_ART_SERVICE_TYPE_STRING = "patch_dart_service_type";
     public final static String PATCH_DALUIK_SERVICE_TYPE_STRING = "patch_dalvlk_service_type";
 
+    public final static String PATCH_INFO_FILE_NAME = "patch.xml";
+
     public final static String FIX_DEX_NAME = "fixOrgDex.dex";
     public final static String FIX_ZIP_NAME = "fixOrgDex.zip";
-    public final static String FIX_DEX_OPT_PATH = "DexOptPath";
 
+    public final static String FIX_DEX_OPT_PATH = "DexOptPath";
 
     public final static String ZIP_SUFFIX = ".zip";
     public final static String DEX_SUFFIX = ".dex";
     public final static String DEX_PREFIX = "classes";
+
+
+
 }

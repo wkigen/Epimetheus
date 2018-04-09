@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<patch>
+    <version>1.0.1</version>
+    <patch_name>patch101</patch_name>
+    <can_hot>true</can_hot>
+    <class>com.github.wkigen.epimetheus_simple.Patch</class>
+</patch>

@@ -6,6 +6,7 @@ import android.content.Intent;
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
 import com.github.wkigen.epimetheus.loader.EpimetheusLoader;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
+import com.github.wkigen.epimetheus.utils.SystemUtils;
 import com.github.wkigen.epimetheus.utils.Utils;
 
 /**
@@ -30,14 +31,13 @@ public class EpimetheusService extends IntentService {
 
         String patchDexPath = intent.getStringExtra(EpimetheusConstant.PATCH_DEX_STRING);
         String optDexPath = intent.getStringExtra(EpimetheusConstant.PATCH_OPT_DEX_STRING);
-        String serviceType = intent.getStringExtra(EpimetheusConstant.PATCH_SERVICE_TYPE_STRING);
 
         if (patchDexPath== null || optDexPath == null){
             EpimetheusLog.e(TAG,"patchDexPath or optDexPath can not be null");
             return;
         }
 
-        if (serviceType.equals(EpimetheusConstant.PATCH_ART_SERVICE_TYPE_STRING))
+        if (SystemUtils.isART())
              EpimetheusLoader.tryArtInstall(getApplicationContext(),patchDexPath,optDexPath);
         else
             EpimetheusLoader.tryDalvikInstall(getApplicationContext(),patchDexPath,optDexPath);
