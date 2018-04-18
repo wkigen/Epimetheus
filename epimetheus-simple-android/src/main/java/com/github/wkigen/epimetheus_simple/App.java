@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.github.wkigen.epimetheus.EpimetheusManager;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,6 +31,9 @@ public class App extends Application {
         try{
             inputStream =  getAssets().open(patchName);
             String path = getFilesDir().getAbsolutePath()+"/"+patchName;
+            File patchFile = new File(path);
+            if (patchFile.exists())
+                return;
             outputStream = new FileOutputStream(path);
 
             byte[] buffer = new byte[1024];
