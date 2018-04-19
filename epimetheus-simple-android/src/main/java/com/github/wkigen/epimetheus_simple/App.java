@@ -26,7 +26,7 @@ public class App extends Application {
 
         InputStream inputStream = null;
         OutputStream outputStream = null;
-        final String patchName = "Patch.patch";
+        final String patchName = "patch101.patch";
 
         try{
             inputStream =  getAssets().open(patchName);

@@ -12,4 +12,8 @@ public class Patch {
         return "base app";
     }
 
+    public String print(String flag){
+        return "base app "+flag;
+    }
+
 }

@@ -8,6 +8,7 @@ import com.github.wkigen.epimetheus.annotation.FIXMETHOD;
 import com.github.wkigen.epimetheus.common.EpimetheusConstant;
 import com.github.wkigen.epimetheus.jni.EpimetheusJni;
 import com.github.wkigen.epimetheus.log.EpimetheusLog;
+import com.github.wkigen.epimetheus.patch.EpimetheusPatch;
 import com.github.wkigen.epimetheus.utils.SystemUtils;
 import com.github.wkigen.epimetheus.utils.Utils;
 
@@ -36,7 +37,7 @@ public class EpimetheusLoader {
 
     public final static String TAG = "EpimetheusLoader";
 
-    public static boolean tryHotInstall(Context context, String dexPath,String fixDexOptPath,List<String> fixClassList){
+    public static boolean tryHotInstall(Context context, String dexPath,String fixDexOptPath,List<EpimetheusPatch.FixClassInfo> fixClassList){
         try{
             File patchDexFile = new File(dexPath);
             if (!patchDexFile.exists())
@@ -65,11 +66,10 @@ public class EpimetheusLoader {
 
             Enumeration<String> entrys = dexFile.entries();
             Class<?> patchClazz = null;
-            FIXMETHOD fixmethod;
             while (entrys.hasMoreElements()) {
                 String entry = entrys.nextElement();
-                for (String fixClassName : fixClassList){
-                    if (entry.equals(fixClassName) ) {
+                for (EpimetheusPatch.FixClassInfo fixClassInfo : fixClassList){
+                    if (entry.equals(fixClassInfo.name) ) {
                         patchClazz = dexFile.loadClass(entry, patchClassLoader);
                         if (patchClazz != null) {
 
@@ -82,15 +82,29 @@ public class EpimetheusLoader {
 
                             Method[] methods = patchClazz.getDeclaredMethods();
                             for (Method patchMethod : methods) {
-                                fixmethod = patchMethod.getAnnotation(FIXMETHOD.class);
-                                if (fixmethod != null){
-                                    if (patchMethod.getName().equals(patchMethod.getName())) {
-                                        Class<?> willFixClazz = context.getClassLoader().loadClass(fixClassName);
-                                        Method willFixMethod = willFixClazz.getDeclaredMethod(patchMethod.getName(), patchMethod.getParameterTypes());
-                                        EpimetheusJni.replaceMethod(willFixMethod, patchMethod);
+                                for (EpimetheusPatch.FixMethodInfo fixMethodInfo:fixClassInfo.methods){
+                                    if (patchMethod.getName().equals(fixMethodInfo.name)){
+                                        Class<?>[]  patchMethodParams = patchMethod.getParameterTypes();
+                                        if (patchMethodParams.length == fixMethodInfo.params.size()){
+                                            int index = 0;
+                                            boolean isSame = true;
+                                            for (Class clazz : patchMethodParams){
+                                                if (!clazz.getName().equals(fixMethodInfo.params.get(index))){
+                                                    isSame = false;
+                                                }
+                                            }
+                                            if (isSame){
+                                                Class<?> willFixClazz = context.getClassLoader().loadClass(fixClassInfo.name);
+                                                Method willFixMethod = willFixClazz.getDeclaredMethod(patchMethod.getName(), patchMethod.getParameterTypes());
+                                                EpimetheusJni.replaceMethod(willFixMethod, patchMethod);
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
                             }
+
+
                         }
                     }
                 }
@@ -100,6 +114,7 @@ public class EpimetheusLoader {
         }
         return true;
     }
+
     public static boolean tryArtInstall(Context context, String dexPath,String optDexPath) {
 
         ZipFile lastDexZipFile = null;
